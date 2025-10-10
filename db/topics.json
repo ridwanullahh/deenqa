@@ -1,0 +1,92 @@
+[
+  {
+    "id": "1",
+    "name": "Prayer",
+    "slug": "prayer",
+    "count": 124,
+    "color": "emerald",
+    "description": "Learn about the pillars, conditions, and rulings related to Salah (prayer) in Islam",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "2",
+    "name": "Fasting",
+    "slug": "fasting",
+    "count": 87,
+    "color": "blue",
+    "description": "Rulings and guidance on fasting, including Ramadan and voluntary fasts",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "3",
+    "name": "Zakat",
+    "slug": "zakat",
+    "count": 56,
+    "color": "amber",
+    "description": "Understanding obligatory charity, calculations, and who is eligible to receive it",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "4",
+    "name": "Hajj",
+    "slug": "hajj",
+    "count": 78,
+    "color": "purple",
+    "description": "Guidance on the pilgrimage to Makkah, its rituals, and conditions",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "5",
+    "name": "Family",
+    "slug": "family",
+    "count": 92,
+    "color": "emerald",
+    "description": "Islamic rulings on marriage, divorce, children, and family relationships",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "6",
+    "name": "Business",
+    "slug": "business",
+    "count": 63,
+    "color": "blue",
+    "description": "Islamic finance, trade, contracts, and business ethics",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "7",
+    "name": "Aqeedah",
+    "slug": "aqeedah",
+    "count": 105,
+    "color": "amber",
+    "description": "Core beliefs and creed in Islam",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "8",
+    "name": "Tafsir",
+    "slug": "tafsir",
+    "count": 118,
+    "color": "purple",
+    "description": "Quranic exegesis and interpretation",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": "9",
+    "name": "Hadith",
+    "slug": "hadith",
+    "count": 143,
+    "color": "emerald",
+    "description": "Prophetic traditions and their explanations",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  }
+]
