@@ -57,6 +57,19 @@ interface Analytics {
 }
 
 async function getFileFromGitHub(path: string): Promise<any> {
+  // Graceful fallback when GitHub storage is not configured (no token,
+  // or owner/repo are placeholders). Returns default content so the API
+  // responds with empty data instead of erroring. This lets the app
+  // remain deployable on Cloudflare Pages without GitHub credentials,
+  // with Lightbase as the production backend.
+  if (
+    !process.env.GITHUB_TOKEN ||
+    GITHUB_OWNER === "your-org" ||
+    GITHUB_REPO === "qa-data"
+  ) {
+    return { content: getDefaultContent(path), sha: null }
+  }
+
   try {
     const { data } = await octokit.repos.getContent({
       owner: GITHUB_OWNER,
