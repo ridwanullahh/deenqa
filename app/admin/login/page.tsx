@@ -1,112 +1,43 @@
-"use client"
+// Admin login page: server-rendered with a small client form.
+// Bismillah Ar-Rahman Ar-Raheem.
+//
+// The page reads the `from` query string so that after a successful
+// login the user is returned to the page they originally requested.
+// The actual auth call goes to POST /api/auth/login which sets the
+// `deenqa_admin` JWT cookie. On success the client navigates to `from`
+// or `/admin`.
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
-import { cn } from "@/lib/utils"
-export default function AdminLoginPage() {
-  const router = useRouter()
-  const { theme } = useTheme()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+import { Suspense } from "react"
+import AdminLoginForm from "./admin-login-form"
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
 
-    const adminCreds = process.env.NEXT_PUBLIC_ADMIN_CREDENTIALS || ""
-    const admins = adminCreds.split(",").map((cred) => {
-      const [adminEmail, adminPassword] = cred.split(":")
-      return { email: adminEmail, password: adminPassword }
-    })
-
-    const admin = admins.find(
-      (admin) => admin.email === email && admin.password === password
-    )
-
-    if (admin) {
-      localStorage.setItem("admin-token", "true")
-      router.push("/admin")
-    } else {
-      setError("Invalid credentials")
-    }
-  }
-
+export default function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>
+}) {
   return (
-    <div className={cn("min-h-screen flex items-center justify-center", theme === "dark" ? "bg-gray-950" : "bg-[#f8f6f1]")}>
-      <div className={cn("w-full max-w-md p-8 space-y-6 rounded-2xl", theme === "dark" ? "bg-gray-900" : "bg-white shadow-lg")}>
-        <div className="text-center">
-          <h1 className={cn("text-3xl font-bold", theme === "dark" ? "text-white" : "text-emerald-800")}>
-            Admin Login
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold text-emerald-800 dark:text-emerald-300">
+            DeenQA Admin
           </h1>
-          <p className={cn("mt-2", theme === "dark" ? "text-gray-400" : "text-gray-600")}>
-            Enter your credentials to access the dashboard.
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Sign in to manage questions, topics, and review activity.
           </p>
         </div>
-        <form className="space-y-6" onSubmit={handleLogin}>
-          <div>
-            <label
-              htmlFor="email"
-              className={cn("block text-sm font-medium", theme === "dark" ? "text-gray-300" : "text-gray-700")}
-            >
-              Email Address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={cn(
-                "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2",
-                theme === "dark"
-                  ? "bg-gray-800 border-gray-700 text-white focus:ring-emerald-500 focus:border-emerald-500"
-                  : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500",
-              )}
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className={cn("block text-sm font-medium", theme === "dark" ? "text-gray-300" : "text-gray-700")}
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={cn(
-                "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2",
-                theme === "dark"
-                  ? "bg-gray-800 border-gray-700 text-white focus:ring-emerald-500 focus:border-emerald-500"
-                  : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500",
-              )}
-            />
-          </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <div>
-            <button
-              type="submit"
-              className={cn(
-                "w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
-                theme === "dark"
-                  ? "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
-                  : "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500",
-              )}
-            >
-              Sign in
-            </button>
-          </div>
-        </form>
+        <Suspense fallback={<div className="text-center text-sm text-muted-foreground">Loading...</div>}>
+          <AdminLoginFormWrapper />
+        </Suspense>
       </div>
     </div>
   )
+}
+
+// We must await searchParams because Next.js 15 makes it a Promise.
+async function AdminLoginFormWrapper() {
+  return <AdminLoginForm />
 }

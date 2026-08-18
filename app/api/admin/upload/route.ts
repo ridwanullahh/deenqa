@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
 function verifyAuth(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

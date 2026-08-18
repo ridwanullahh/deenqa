@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { ArrowLeft, Filter, Search } from "lucide-react"
@@ -12,13 +12,17 @@ import QuestionCard from "@/components/question-card"
 import BottomNav from "@/components/bottom-nav"
 import SearchModal from "@/components/search-modal"
 
-export default function TopicPage({ params }: { params: { slug: string } }) {
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
+export default function TopicPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const { theme } = useTheme()
+  const { slug } = use(params)
   const [mounted, setMounted] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const { data: topic, isLoading: topicLoading } = useTopicBySlug(params.slug)
+  const { data: topic, isLoading: topicLoading } = useTopicBySlug(slug)
   const { data: topicQuestions = [], isLoading: questionsLoading } = useQuestionsByTopic(topic?.id || "")
 
   useEffect(() => {

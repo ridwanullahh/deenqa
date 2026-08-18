@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 
-export function useMobile() {
+export function useMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -22,3 +22,8 @@ export function useMobile() {
 
   return isMobile
 }
+
+// Alias kept for backward compatibility with the shadcn sidebar
+// template which imports `useIsMobile`.
+export const useIsMobile = useMobile
+

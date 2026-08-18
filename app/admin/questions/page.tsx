@@ -19,6 +19,9 @@ import { useQuestions, useCreateQuestion, useUpdateQuestion, useDeleteQuestion }
 import { ErrorBoundary } from "@/components/error-boundary"
 import type { QuestionCreate } from "@/lib/types"
 
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
 function AdminQuestionsPageContent() {
   const { theme } = useTheme()
   const { data: questions = [], isLoading, error } = useQuestions()
@@ -47,6 +50,8 @@ function AdminQuestionsPageContent() {
           topicIds: [],
           tags: [],
           status: "published",
+          viewCount: 0,
+          bookmarkCount: 0,
         }
         await createMutation.mutateAsync(questionData)
       }

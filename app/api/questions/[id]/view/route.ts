@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { incrementViewCount } from "@/lib/github-db"
 
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await incrementViewCount(params.id)
+    const { id } = await params
+    await incrementViewCount(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error incrementing view count:", error)

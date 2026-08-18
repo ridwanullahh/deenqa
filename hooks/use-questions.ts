@@ -1,3 +1,5 @@
+"use client"
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface Question {
@@ -7,13 +9,16 @@ interface Question {
   excerpt?: string
   topicIds: string[]
   tags: string[]
-  status: "draft" | "published" | "pending"
+  status: "draft" | "published" | "archived"
   createdAt: string
   updatedAt: string
-  createdBy: string
+  createdBy?: string
   viewCount: number
   bookmarkCount: number
   imageUrl?: string
+  source?: string
+  scholar?: string
+  category?: string
 }
 
 interface QuestionCreate {
@@ -22,12 +27,15 @@ interface QuestionCreate {
   excerpt?: string
   topicIds?: string[]
   tags?: string[]
-  status?: "draft" | "published" | "pending"
-  createdBy: string
+  status?: "draft" | "published" | "archived"
   viewCount?: number
   bookmarkCount?: number
   imageUrl?: string
 }
+
+// The admin JWT is an httpOnly cookie named `deenqa_admin`; the browser
+// sends it automatically with every same-origin request. No localStorage
+// token is needed.
 
 export function useQuestions(status: string = "published") {
   return useQuery({
@@ -99,11 +107,9 @@ export function useAdminQuestions(params: {
   return useQuery({
     queryKey: ["admin", "questions", ...Object.values(params)],
     queryFn: async () => {
-      const token = localStorage.getItem("adminToken")
+      // credentials: "include" ensures the httpOnly admin cookie is sent
       const res = await fetch(`/api/admin/questions?${queryParams}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch questions")
       return res.json()
@@ -116,16 +122,16 @@ export function useCreateQuestion() {
 
   return useMutation({
     mutationFn: async (data: QuestionCreate) => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch("/api/admin/questions", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error("Failed to create question")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to create question")
+      }
       return res.json()
     },
     onSuccess: () => {
@@ -140,16 +146,16 @@ export function useUpdateQuestion() {
 
   return useMutation({
     mutationFn: async (data: { id: string } & Partial<Question>) => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch("/api/admin/questions", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error("Failed to update question")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to update question")
+      }
       return res.json()
     },
     onSuccess: (_data, variables) => {
@@ -165,14 +171,14 @@ export function useDeleteQuestion() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch(`/api/admin/questions?id=${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
-      if (!res.ok) throw new Error("Failed to delete question")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to delete question")
+      }
       return res.json()
     },
     onSuccess: () => {
@@ -186,6 +192,7 @@ export async function incrementQuestionView(id: string) {
   try {
     await fetch(`/api/questions/${id}/view`, {
       method: "POST",
+      credentials: "include",
     })
   } catch (error) {
     console.error("Failed to increment view count:", error)

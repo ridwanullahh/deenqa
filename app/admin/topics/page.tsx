@@ -19,6 +19,9 @@ import { useTopics, useCreateTopic, useUpdateTopic, useDeleteTopic } from "@/hoo
 import { ErrorBoundary } from "@/components/error-boundary"
 import type { TopicCreate } from "@/lib/types"
 
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
 function AdminTopicsPageContent() {
   const { theme } = useTheme()
   const { data: topics = [], isLoading, error } = useTopics()
@@ -44,6 +47,7 @@ function AdminTopicsPageContent() {
           name: isEditing.name,
           slug: isEditing.slug,
           description: isEditing.description || "",
+          questionCount: 0,
         }
         await createMutation.mutateAsync(topicData)
       }

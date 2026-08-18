@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
@@ -19,9 +19,13 @@ import BottomNav from "@/components/bottom-nav"
 import RelatedQuestionCard from "@/components/related-question-card"
 import SearchModal from "@/components/search-modal"
 
-export default function QuestionPage({ params }: { params: { id: string } }) {
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
+export default function QuestionPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const { theme } = useTheme()
+  const { id } = use(params)
   const [mounted, setMounted] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -29,7 +33,7 @@ export default function QuestionPage({ params }: { params: { id: string } }) {
   const [isEditingNotes, setIsEditingNotes] = useState(false)
   const [activeTab, setActiveTab] = useState("answer")
 
-  const { data: question, isLoading } = useQuestion(params.id)
+  const { data: question, isLoading } = useQuestion(id)
 
   useEffect(() => {
     setMounted(true)
@@ -37,35 +41,35 @@ export default function QuestionPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (question) {
-      setIsBookmarked(localStorage.getItem(`bookmark-${params.id}`) === "true")
-      const savedNotes = localStorage.getItem(`notes-${params.id}`)
+      setIsBookmarked(localStorage.getItem(`bookmark-${id}`) === "true")
+      const savedNotes = localStorage.getItem(`notes-${id}`)
       if (savedNotes) {
         setUserNotes(savedNotes)
       }
-      incrementQuestionView(params.id)
+      incrementQuestionView(id)
     }
-  }, [question, params.id])
+  }, [question, id])
 
   const toggleBookmark = () => {
     const newState = !isBookmarked
     setIsBookmarked(newState)
     if (newState) {
-      localStorage.setItem(`bookmark-${params.id}`, "true")
+      localStorage.setItem(`bookmark-${id}`, "true")
       const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]")
-      if (!bookmarks.includes(params.id)) {
-        bookmarks.push(params.id)
+      if (!bookmarks.includes(id)) {
+        bookmarks.push(id)
         localStorage.setItem("bookmarks", JSON.stringify(bookmarks))
       }
     } else {
-      localStorage.removeItem(`bookmark-${params.id}`)
+      localStorage.removeItem(`bookmark-${id}`)
       const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]")
-      const updated = bookmarks.filter((id: string) => id !== params.id)
+      const updated = bookmarks.filter((bmId: string) => bmId !== id)
       localStorage.setItem("bookmarks", JSON.stringify(updated))
     }
   }
 
   const saveNotes = () => {
-    localStorage.setItem(`notes-${params.id}`, userNotes)
+    localStorage.setItem(`notes-${id}`, userNotes)
     setIsEditingNotes(false)
   }
 
