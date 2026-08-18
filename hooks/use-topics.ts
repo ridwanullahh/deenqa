@@ -6,6 +6,7 @@ interface Topic {
   slug: string
   questionCount: number
   description?: string
+  color?: string
   createdAt: string
   updatedAt: string
 }
@@ -15,7 +16,11 @@ interface TopicCreate {
   slug: string
   questionCount?: number
   description?: string
+  color?: string
 }
+
+// The admin JWT is an httpOnly cookie named `deenqa_admin`; the browser
+// sends it automatically with every same-origin request.
 
 export function useTopics() {
   return useQuery({
@@ -72,11 +77,8 @@ export function useAdminTopics() {
   return useQuery({
     queryKey: ["admin", "topics"],
     queryFn: async () => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch("/api/admin/topics", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch topics")
       return res.json()
@@ -89,16 +91,16 @@ export function useCreateTopic() {
 
   return useMutation({
     mutationFn: async (data: TopicCreate) => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch("/api/admin/topics", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error("Failed to create topic")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to create topic")
+      }
       return res.json()
     },
     onSuccess: () => {
@@ -113,16 +115,16 @@ export function useUpdateTopic() {
 
   return useMutation({
     mutationFn: async (data: { id: string } & Partial<Topic>) => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch("/api/admin/topics", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error("Failed to update topic")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to update topic")
+      }
       return res.json()
     },
     onSuccess: (_data, variables) => {
@@ -138,14 +140,14 @@ export function useDeleteTopic() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch(`/api/admin/topics?id=${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
-      if (!res.ok) throw new Error("Failed to delete topic")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to delete topic")
+      }
       return res.json()
     },
     onSuccess: () => {

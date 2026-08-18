@@ -14,7 +14,7 @@ interface Topic {
   id: string
   name: string
   slug: string
-  count: number
+  questionCount: number
   color: string
   description: string
 }
@@ -27,7 +27,7 @@ export function TopicManager() {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    count: 0,
+    questionCount: 0,
     color: "emerald",
     description: "",
   })
@@ -41,7 +41,9 @@ export function TopicManager() {
   const fetchTopics = async () => {
     setLoading(true)
     try {
-      const response = await fetch("/api/admin/topics")
+      const response = await fetch("/api/admin/topics", {
+        credentials: "include",
+      })
 
       if (response.ok) {
         const data = await response.json()
@@ -56,7 +58,6 @@ export function TopicManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const token = localStorage.getItem("adminToken")
 
     try {
       let response
@@ -65,8 +66,8 @@ export function TopicManager() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({ id: editingTopic.id, ...formData }),
         })
       } else {
@@ -74,8 +75,8 @@ export function TopicManager() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify(formData),
         })
       }
@@ -85,6 +86,9 @@ export function TopicManager() {
         setIsDialogOpen(false)
         resetForm()
         fetchTopics()
+      } else {
+        const data = await response.json().catch(() => ({}))
+        toast.error(data.error || "Failed to save topic")
       }
     } catch (error) {
       toast.error("Failed to save topic")
@@ -94,18 +98,18 @@ export function TopicManager() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this topic?")) return
 
-    const token = localStorage.getItem("adminToken")
     try {
       const response = await fetch(`/api/admin/topics?id=${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
 
       if (response.ok) {
         toast.success("Topic deleted successfully")
         fetchTopics()
+      } else {
+        const data = await response.json().catch(() => ({}))
+        toast.error(data.error || "Failed to delete topic")
       }
     } catch (error) {
       toast.error("Failed to delete topic")
@@ -117,7 +121,7 @@ export function TopicManager() {
     setFormData({
       name: topic.name,
       slug: topic.slug,
-      count: topic.count,
+      questionCount: topic.questionCount,
       color: topic.color,
       description: topic.description,
     })
@@ -129,7 +133,7 @@ export function TopicManager() {
     setFormData({
       name: "",
       slug: "",
-      count: 0,
+      questionCount: 0,
       color: "emerald",
       description: "",
     })
@@ -180,8 +184,8 @@ export function TopicManager() {
                     <Label>Question Count</Label>
                     <Input
                       type="number"
-                      value={formData.count}
-                      onChange={(e) => setFormData({ ...formData, count: parseInt(e.target.value) })}
+                      value={formData.questionCount}
+                      onChange={(e) => setFormData({ ...formData, questionCount: parseInt(e.target.value) })}
                       required
                     />
                   </div>
@@ -244,7 +248,7 @@ export function TopicManager() {
                     <p className="text-sm text-muted-foreground mb-2">{topic.description}</p>
                     <div className="flex items-center gap-2">
                       <span className={`w-3 h-3 rounded-full bg-${topic.color}-500`} />
-                      <span className="text-sm">{topic.count} questions</span>
+                      <span className="text-sm">{topic.questionCount} questions</span>
                     </div>
                   </CardContent>
                 </Card>

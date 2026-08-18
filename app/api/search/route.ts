@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { searchQuestions, searchTopics } from "@/lib/github-db"
 
+export const runtime = "edge"
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {

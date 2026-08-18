@@ -8,6 +8,9 @@ import {
   updateTopicQuestionCounts,
 } from "@/lib/github-db"
 
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
+
 function verifyAuth(request: NextRequest): string | null {
   const authHeader = request.headers.get("authorization")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -61,6 +64,9 @@ export async function GET(request: NextRequest) {
     questions.sort((a, b) => {
       const aVal = a[sort as keyof typeof a]
       const bVal = b[sort as keyof typeof b]
+      if (aVal == null && bVal == null) return 0
+      if (aVal == null) return 1
+      if (bVal == null) return -1
       if (order === "asc") {
         return aVal > bVal ? 1 : -1
       }

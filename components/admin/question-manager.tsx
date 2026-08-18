@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, Plus, Upload, Download, Search, Image as ImageIcon } from "lucide-react"
+import { Pencil, Trash2, Plus, Upload, Download, Search, Image as ImageIcon, Eye, Bookmark, FileText, User } from "lucide-react"
 import { toast } from "sonner"
 
 interface Question {
@@ -21,7 +21,7 @@ interface Question {
   excerpt: string
   source: string
   scholar: string
-  status: "draft" | "published" | "pending"
+  status: "draft" | "published" | "archived"
   viewCount: number
   bookmarkCount: number
   imageUrl?: string
@@ -66,11 +66,8 @@ export function QuestionManager() {
       if (filterStatus !== "all") params.append("status", filterStatus)
       if (filterCategory !== "all") params.append("category", filterCategory)
 
-      const token = localStorage.getItem("adminToken")
       const response = await fetch(`/api/admin/questions?${params}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
 
       if (response.ok) {
@@ -87,12 +84,13 @@ export function QuestionManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const token = localStorage.getItem("adminToken")
 
     try {
       const payload = {
         ...formData,
         tags: formData.tags.split(",").map((t) => t.trim()),
+        viewCount: 0,
+        bookmarkCount: 0,
       }
 
       let response
@@ -101,8 +99,8 @@ export function QuestionManager() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({ id: editingQuestion.id, ...payload }),
         })
       } else {
@@ -110,8 +108,8 @@ export function QuestionManager() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify(payload),
         })
       }
@@ -121,6 +119,9 @@ export function QuestionManager() {
         setIsDialogOpen(false)
         resetForm()
         fetchQuestions()
+      } else {
+        const data = await response.json().catch(() => ({}))
+        toast.error(data.error || "Failed to save question")
       }
     } catch (error) {
       toast.error("Failed to save question")
@@ -130,18 +131,18 @@ export function QuestionManager() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this question?")) return
 
-    const token = localStorage.getItem("adminToken")
     try {
       const response = await fetch(`/api/admin/questions?id=${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
 
       if (response.ok) {
         toast.success("Question deleted successfully")
         fetchQuestions()
+      } else {
+        const data = await response.json().catch(() => ({}))
+        toast.error(data.error || "Failed to delete question")
       }
     } catch (error) {
       toast.error("Failed to delete question")
@@ -184,7 +185,6 @@ export function QuestionManager() {
     if (!file) return
 
     setUploading(true)
-    const token = localStorage.getItem("adminToken")
 
     try {
       const formData = new FormData()
@@ -192,9 +192,7 @@ export function QuestionManager() {
 
       const response = await fetch("/api/admin/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
         body: formData,
       })
 
@@ -202,6 +200,8 @@ export function QuestionManager() {
         const data = await response.json()
         setFormData((prev) => ({ ...prev, imageUrl: data.url }))
         toast.success("Image uploaded successfully")
+      } else {
+        toast.error("Failed to upload image")
       }
     } catch (error) {
       toast.error("Failed to upload image")
@@ -229,15 +229,18 @@ export function QuestionManager() {
       const text = await file.text()
       const importedQuestions = JSON.parse(text)
 
-      const token = localStorage.getItem("adminToken")
       for (const question of importedQuestions) {
         await fetch("/api/admin/questions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(question),
+          credentials: "include",
+          body: JSON.stringify({
+            ...question,
+            viewCount: question.viewCount ?? 0,
+            bookmarkCount: question.bookmarkCount ?? 0,
+          }),
         })
       }
 
@@ -281,7 +284,7 @@ export function QuestionManager() {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -341,7 +344,7 @@ export function QuestionManager() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
                           <SelectItem value="published">Published</SelectItem>
                         </SelectContent>
                       </Select>
@@ -444,7 +447,7 @@ export function QuestionManager() {
                         <h3 className="font-semibold text-lg mb-2">{question.title}</h3>
                         <div className="flex flex-wrap gap-2 mb-2">
                           <Badge variant="outline">{question.category}</Badge>
-                          <Badge variant={question.status === "published" ? "default" : question.status === "pending" ? "secondary" : "outline"}>
+                          <Badge variant={question.status === "published" ? "default" : question.status === "archived" ? "secondary" : "outline"}>
                             {question.status}
                           </Badge>
                           {question.tags.map((tag) => (
@@ -455,10 +458,22 @@ export function QuestionManager() {
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">{question.excerpt}</p>
                         <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>👁️ {question.viewCount} views</span>
-                          <span>🔖 {question.bookmarkCount} bookmarks</span>
-                          <span>📚 {question.source}</span>
-                          <span>👨‍🏫 {question.scholar}</span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {question.viewCount} views
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Bookmark className="h-3 w-3" />
+                            {question.bookmarkCount} bookmarks
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            {question.source}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {question.scholar}
+                          </span>
                         </div>
                       </div>
                       <div className="flex gap-2">

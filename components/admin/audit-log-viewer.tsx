@@ -25,11 +25,8 @@ export function AuditLogViewer() {
   const fetchLogs = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem("adminToken")
       const response = await fetch("/api/admin/analytics", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
 
       if (response.ok) {
